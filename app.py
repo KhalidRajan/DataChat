@@ -12,7 +12,7 @@ from qa_bot import create_index, evaluate_faithfulness, evaluate_relevancy
 
 # Load environment variables and setup
 load_dotenv()
-Settings.llm = OpenAI(model="gpt-4")
+Settings.llm = OpenAI(model="gpt-4o-mini")
 
 def save_uploaded_file(uploaded_file):
     # Create a temporary directory

@@ -13,7 +13,7 @@ from llama_index.core.evaluation import RelevancyEvaluator
 load_dotenv()
 api_key = os.environ["OPENAI_API_KEY"]
 Settings.llm = OpenAI(model = "gpt-4o-mini")
-llm = OpenAI(model="gpt-4o-mini", temperature=0.0)
+llm = OpenAI(model="gpt-4o-mini")
 
 def load_documents(directory):
     documents = SimpleDirectoryReader(directory).load_data()
