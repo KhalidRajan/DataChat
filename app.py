@@ -8,7 +8,7 @@ import chromadb
 import tempfile
 
 # Import functions from qa_bot.py
-from qa_bot import create_index, evaluate_faithfulness, evaluate_relevancy
+from qa_bot import create_index, evaluate_faithfulness, evaluate_relevancy, load_documents
 
 # Load environment variables and setup
 load_dotenv()
@@ -22,8 +22,8 @@ def save_uploaded_file(uploaded_file):
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
         
-        # Load documents from the temporary directory
-        documents = SimpleDirectoryReader(temp_dir).load_data()
+        # Use imported load_documents function instead
+        documents = load_documents(temp_dir)
         return documents
 
 # Streamlit UI
