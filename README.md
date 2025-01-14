@@ -1,6 +1,6 @@
  # Data Chat
 
-This project utilizes a RAG system to answer queries about a document. The system includes a Streamlit-based front-end for user interaction.
+This project utilizes a RAG system to answer queries about a document or a webpage. The system includes a Streamlit-based front-end for user interaction.
 
 ## Table of Contents
 
@@ -45,7 +45,7 @@ To run the project locally, follow these steps:
 ## Usage
 
 1. Start the application using the command above.
-2. Upload a document.
+2. Upload a document or a webpage.
 3. Wait for the system to process the document.
 4. Enter a query in the provided text input box in the front-end.
 5. Wait for the system to process your query.
@@ -53,6 +53,7 @@ To run the project locally, follow these steps:
 
 ## Screenshot
 
-Below is a screenshot of the Streamlit front-end:
+Below are screenshots of the Streamlit front-end:
 
-![Streamlit Front-End](ui_screenshot.png)
+![Streamlit Front-End](ui_screenshot_doc.png)
+![Streamlit Front-End](ui_screenshot_web.png)

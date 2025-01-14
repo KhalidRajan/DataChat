@@ -1,5 +1,6 @@
 from dotenv import load_dotenv
 import os
+import uuid
 from llama_index.core import Settings
 from llama_index.llms.openai import OpenAI
 from llama_index.core import SimpleDirectoryReader
@@ -9,6 +10,7 @@ from llama_index.core import StorageContext
 from llama_index.core import VectorStoreIndex
 from llama_index.core.evaluation import FaithfulnessEvaluator
 from llama_index.core.evaluation import RelevancyEvaluator
+from llama_index.readers.web import SimpleWebPageReader
 
 load_dotenv()
 api_key = os.environ["OPENAI_API_KEY"]
@@ -40,3 +42,11 @@ def evaluate_relevancy(query, response) -> tuple[float, bool]:
     eval_result = relevancy_evaluator.evaluate_response(query = query, response=response)
     return (eval_result.score, eval_result.passing)
 
+def generate_random_uuid():
+    return str(uuid.uuid4())
+
+def scrape_webpage(url):
+    documents = SimpleWebPageReader(html_to_text=True).load_data(
+        urls = [url]
+    )
+    return documents

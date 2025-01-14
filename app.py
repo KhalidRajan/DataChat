@@ -8,7 +8,7 @@ import chromadb
 import tempfile
 
 # Import functions from qa_bot.py
-from qa_bot import create_index, evaluate_faithfulness, evaluate_relevancy, load_documents
+from qa_bot import create_index, evaluate_faithfulness, evaluate_relevancy, load_documents, scrape_webpage, generate_random_uuid
 
 # Load environment variables and setup
 load_dotenv()
@@ -27,30 +27,60 @@ def save_uploaded_file(uploaded_file):
         return documents
 
 # Streamlit UI
-st.title("Document Q&A System")
+st.title("DataChat")
 
-# File upload
-uploaded_file = st.file_uploader("Upload a document", type=["txt", "pdf", "docx"])
+# Add tabs for different input methods
+input_method = st.tabs(["Upload Document", "Enter URL"])
 
-if uploaded_file:
-    # Initialize session state for the index if it doesn't exist
-    if "index" not in st.session_state:
-        with st.spinner("Processing document..."):
-            # Save and process the uploaded file
-            documents = save_uploaded_file(uploaded_file)
+with input_method[0]:
+    # Existing file upload logic
+    uploaded_file = st.file_uploader("Upload a document", type=["txt", "pdf", "docx"])
+    
+    if uploaded_file:
+        # Initialize session state for the index if it doesn't exist
+        if "index" not in st.session_state:
+            with st.spinner("Processing document..."):
+                # Save and process the uploaded file
+                documents = save_uploaded_file(uploaded_file)
+                
+                # Create or get the database
+                db = chromadb.PersistentClient(path="./chroma_db")
+                
+                # Use random UUID for collection name
+                collection_name = generate_random_uuid()
+                index = create_index(db, documents, collection_name)
+                
+                # Store the index in session state
+                st.session_state.index = index
             
-            # Create or get the database
-            db = chromadb.PersistentClient(path="./chroma_db")
-            
-            # Create the index using imported function
-            index = create_index(db, documents, "custom_files")
-            
-            # Store the index in session state
-            st.session_state.index = index
-        
-        st.success("Document processed successfully!")
+            st.success("Document processed successfully!")
 
-    # Query input
+with input_method[1]:
+    # New URL input section
+    url = st.text_input("Enter webpage URL:")
+    
+    if url:
+        # Initialize session state for the index if it doesn't exist
+        if "index" not in st.session_state:
+            with st.spinner("Processing webpage..."):
+                # Use imported scrape_webpage function
+                documents = scrape_webpage(url)
+                
+                # Create or get the database
+                db = chromadb.PersistentClient(path="./chroma_db")
+                
+                # Use random UUID for collection name
+                collection_name = generate_random_uuid()
+                index = create_index(db, documents, collection_name)
+                
+                # Store the index in session state
+                st.session_state.index = index
+            
+            st.success("Webpage processed successfully!")
+
+# Move query section outside of tabs so it appears for both input methods
+if "index" in st.session_state:
+    # Existing query input and response logic
     query = st.text_input("Ask a question about your document:")
     
     if query:
