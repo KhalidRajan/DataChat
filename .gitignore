@@ -2,3 +2,4 @@
 ./chroma_db
 ./data
 ./db
+./__pycache__
