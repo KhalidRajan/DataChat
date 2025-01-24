@@ -60,7 +60,7 @@ if "index_id" in st.session_state:
 
             if response.status_code == 200:
                 data = response.json()
-                st.write("Answer:", data["response"])
+                st.write(data["response"])
 
                 # Optional: Display evaluation metrics
                 with st.expander("View Response Evaluation"):

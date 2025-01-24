@@ -13,7 +13,10 @@ from qa_bot import (
     evaluate_relevancy, 
     load_documents,
     scrape_webpage,
-    generate_random_uuid
+    generate_random_uuid,
+    create_bm25_retriever,
+    create_fusion_retriever,
+    create_fusion_query_engine
 )
 
 load_dotenv()
@@ -86,8 +89,13 @@ def query():
         
         index = indices[index_id]
 
-        query_engine = index.as_query_engine()
+        vector_retriever = index.as_retriever(similarity_top_k=2)
+        bm25_retriever = create_bm25_retriever(index)
+        fusion_retriever = create_fusion_retriever(vector_retriever, bm25_retriever)
+        query_engine = create_fusion_query_engine(fusion_retriever)
+
         response = query_engine.query(query_text)
+        print(response)
 
         faithfulness_score, faithfulness_passing = evaluate_faithfulness(query_text, response)
         relevancy_score, relevancy_passing = evaluate_relevancy(query_text, response)

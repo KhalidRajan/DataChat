@@ -11,6 +11,9 @@ from llama_index.core import VectorStoreIndex
 from llama_index.core.evaluation import FaithfulnessEvaluator
 from llama_index.core.evaluation import RelevancyEvaluator
 from llama_index.readers.web import SimpleWebPageReader
+from llama_index.retrievers.bm25 import BM25Retriever
+from llama_index.core.retrievers import QueryFusionRetriever
+from llama_index.core.query_engine import RetrieverQueryEngine
 
 load_dotenv()
 api_key = os.environ["OPENAI_API_KEY"]
@@ -37,7 +40,7 @@ def create_index(db, documents, collection_name):
     storage_context = StorageContext.from_defaults(vector_store = vector_store)
     
     index = VectorStoreIndex.from_documents(
-        documents, storage_context = storage_context
+        documents, storage_context = storage_context, store_nodes_override=True
     )
     return index
 
@@ -59,3 +62,25 @@ def scrape_webpage(url):
         urls = [url]
     )
     return documents
+
+def create_bm25_retriever(index):
+    bm25_retriever = BM25Retriever.from_defaults(
+        docstore = index.docstore,
+        similarity_top_k = 2
+    )
+    return bm25_retriever
+
+def create_fusion_retriever(vector_retriever, bm25_retriever):
+    retriever = QueryFusionRetriever(
+        retrievers = [vector_retriever, bm25_retriever],
+        similarity_top_k = 2,
+        num_queries = 4,
+        mode = "reciprocal_rerank",
+        use_async = True,
+        verbose = True
+    )
+    return retriever
+
+def create_fusion_query_engine(retriever):
+    query_engine = RetrieverQueryEngine.from_args(retriever)
+    return query_engine
