@@ -1,30 +1,8 @@
 import streamlit as st
-from dotenv import load_dotenv
-import os
-from llama_index.core import Settings
-from llama_index.llms.openai import OpenAI
-from llama_index.core import SimpleDirectoryReader
-import chromadb
-import tempfile
+import requests
+import json
 
-# Import functions from qa_bot.py
-from qa_bot import create_index, evaluate_faithfulness, evaluate_relevancy, load_documents, scrape_webpage, generate_random_uuid
-
-# Load environment variables and setup
-load_dotenv()
-Settings.llm = OpenAI(model="gpt-4o-mini")
-
-def save_uploaded_file(uploaded_file):
-    # Create a temporary directory
-    with tempfile.TemporaryDirectory() as temp_dir:
-        # Save uploaded file to the temporary directory
-        file_path = os.path.join(temp_dir, uploaded_file.name)
-        with open(file_path, "wb") as f:
-            f.write(uploaded_file.getbuffer())
-        
-        # Use imported load_documents function instead
-        documents = load_documents(temp_dir)
-        return documents
+API_BASE_URL = "http://127.0.0.1:5000"
 
 # Streamlit UI
 st.title("DataChat")
@@ -38,22 +16,20 @@ with input_method[0]:
     
     if uploaded_file:
         # Initialize session state for the index if it doesn't exist
-        if "index" not in st.session_state:
+        if "index_id" not in st.session_state:
             with st.spinner("Processing document..."):
-                # Save and process the uploaded file
-                documents = save_uploaded_file(uploaded_file)
+                file = {"file": uploaded_file}
+                response = requests.post(f"{API_BASE_URL}/process_document", files=file)
                 
-                # Create or get the database
-                db = chromadb.PersistentClient(path="./chroma_db")
-                
-                # Use random UUID for collection name
-                collection_name = generate_random_uuid()
-                index = create_index(db, documents, collection_name)
-                
-                # Store the index in session state
-                st.session_state.index = index
-            
-            st.success("Document processed successfully!")
+                if response.status_code == 200:
+                    data = response.json()
+                    if "status" in data and data["status"] == "error":
+                        st.error(f"Error processing document: {data['message']}")
+                    else:
+                        st.session_state.index_id = data["collection_name"]
+                        st.success("Document processed successfully!")
+                else:
+                    st.error(f"Failed to process document. Status code: {response.status_code}")
 
 with input_method[1]:
     # New URL input section
@@ -63,43 +39,40 @@ with input_method[1]:
         # Initialize session state for the index if it doesn't exist
         if "index" not in st.session_state:
             with st.spinner("Processing webpage..."):
-                # Use imported scrape_webpage function
-                documents = scrape_webpage(url)
                 
-                # Create or get the database
-                db = chromadb.PersistentClient(path="./chroma_db")
-                
-                # Use random UUID for collection name
-                collection_name = generate_random_uuid()
-                index = create_index(db, documents, collection_name)
-                
-                # Store the index in session state
-                st.session_state.index = index
-            
-            st.success("Webpage processed successfully!")
+                response = requests.post(f"{API_BASE_URL}/process_url", json={"url": url})
+                if response.status_code == 200:
+                    data = response.json()
+                    st.session_state.index_id = data["collection_name"]
+                    st.success("Webpage processed successfully!")
+                else:
+                    st.error("Failed to process webpage. Please try again.")
 
 # Move query section outside of tabs so it appears for both input methods
-if "index" in st.session_state:
+if "index_id" in st.session_state:
     # Existing query input and response logic
     query = st.text_input("Ask a question about your document:")
     
     if query:
         with st.spinner("Generating answer..."):
-            # Create query engine and get response
-            query_engine = st.session_state.index.as_query_engine()
-            response = query_engine.query(query)
             
-            # Display response
-            st.write("Answer:", response.response)
+            response = requests.post(f"{API_BASE_URL}/query", json={"query": query, "index_id": st.session_state.index_id})
 
-            # Optional: Display evaluation metrics
-            with st.expander("View Response Evaluation"):
-                # Evaluate faithfulness using imported function
-                faithfulness_score, faithfulness_passing = evaluate_faithfulness(query, response)
-                st.write(f"Faithfulness Score: {faithfulness_score}")
-                st.write(f"Faithfulness Test Passed: {faithfulness_passing}")
+            if response.status_code == 200:
+                data = response.json()
+                st.write("Answer:", data["response"])
+
+                # Optional: Display evaluation metrics
+                with st.expander("View Response Evaluation"):
+                    # Evaluate faithfulness using imported function
+                    eval_data = data["evaluation"]
+                    st.write(f"Faithfulness Score: {eval_data['faithfulness_score']}")
+                    st.write(f"Faithfulness Test Passed: {eval_data['faithfulness_passing']}")
+                    st.write(f"Relevancy Score: {eval_data['relevancy_score']}")
+                    st.write(f"Relevancy Test Passed: {eval_data['relevancy_passing']}")
                 
-                # Evaluate relevancy using imported function
-                relevancy_score, relevancy_passing = evaluate_relevancy(query, response)
-                st.write(f"Relevancy Score: {relevancy_score}")
-                st.write(f"Relevancy Test Passed: {relevancy_passing}") 
+            else:
+                st.error("Failed to generate answer. Please try again.")
+
+            
+

@@ -17,9 +17,18 @@ api_key = os.environ["OPENAI_API_KEY"]
 Settings.llm = OpenAI(model = "gpt-4o-mini")
 llm = OpenAI(model="gpt-4o-mini")
 
-def load_documents(directory):
-    documents = SimpleDirectoryReader(directory).load_data()
-    return documents
+def load_documents(file_path):
+    try:
+        if os.path.isfile(file_path):
+            reader = SimpleDirectoryReader(input_files=[file_path])
+            documents = reader.load_data()
+            if not documents:
+                raise ValueError("No content could be extracted from the file")
+            return documents
+        else:
+            raise ValueError(f"File not found: {file_path}")
+    except Exception as e:
+        raise Exception(f"Error loading document: {str(e)}")
 
 def create_index(db, documents, collection_name):
     chroma_collection = db.get_or_create_collection(collection_name)
