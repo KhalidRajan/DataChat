@@ -1,6 +1,7 @@
  # Data Chat
 
-This project utilizes a RAG system to answer queries about a document or a webpage. The system includes a Streamlit-based front-end for user interaction.
+This project utilizes a RAG system to answer queries about a document or a webpage. The system includes a Streamlit-based front-end for user interaction and a Flask-based backend for
+serving the RAG system.
 
 ## Table of Contents
 
@@ -14,12 +15,13 @@ This project utilizes a RAG system to answer queries about a document or a webpa
 
 - **RAG System**: Uses a vector database to store and retrieve documents and a LLM to answer queries.
 - **Streamlit Front-End**: Interactive and user-friendly interface for entering queries and viewing reports.
+- **Flask Backend**: Serves the RAG system and handles user interactions.
 - **Evaluation**: The response is evaluated for faithfulness and relevancy using the FaithfulnessEvaluator and RelevancyEvaluator from the llama-index library
 
 ## Architecture
 
 1. **Front-End**: A Streamlit-based application for user interaction.
-2. **Back-End**: A RAG system that uses a vector database to store and retrieve documents and a LLM to answer queries.
+2. **Back-End**: A Flask-based application that serves the RAG system and handles user interactions.
 3. **Evaluation**: The response is evaluated for faithfulness and relevancy using the FaithfulnessEvaluator and RelevancyEvaluator from the llama-index library
 
 ## Installation
@@ -37,10 +39,13 @@ To run the project locally, follow these steps:
     ```bash
     pip install -r requirements.txt
 
-3. Run the Streamlit app:
+3. Run the Streamlit and Flask apps:
 
     ```bash
     streamlit run app.py  
+
+    ```bash
+    flask run
 
 ## Usage
 
